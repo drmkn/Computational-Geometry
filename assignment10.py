@@ -210,7 +210,8 @@ def create_kdtree_animation(points, root, bbox):
 def main():
     # Generate random points
     # np.random.seed(42)  # For reproducibility
-    num_points = 15  # Number of points
+    N = int(input("Enter number of points : "))
+    num_points = N  # Number of points
     
     points = np.random.rand(num_points, 2) * 10  # Random points in [0, 10] x [0, 10]
     points = [(p[0], p[1]) for p in points]  # Convert to list of tuples
