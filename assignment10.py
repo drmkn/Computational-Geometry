@@ -104,7 +104,7 @@ def create_kdtree_animation(points, root, bbox):
     line_colors = [palette[1], palette[2]]  # Different colors for vertical and horizontal lines
     
     # Set up figure title with Seaborn styling
-    ax.set_title('2D-Tree Partitioning Animation', fontsize=16, fontweight='bold', pad=20)
+    ax.set_title('2D-Tree building animation', fontsize=16, fontweight='bold', pad=20)
     ax.set_xlabel('X-axis', fontweight='bold', labelpad=10)
     ax.set_ylabel('Y-axis', fontweight='bold', labelpad=10)
     
@@ -174,8 +174,8 @@ def create_kdtree_animation(points, root, bbox):
     legend_elements = [
         Line2D([0], [0], marker='o', color='w', markerfacecolor=point_color, 
                markersize=10, label='Data Points'),
-        Line2D([0], [0], color=line_colors[0], lw=2, label='X-axis Partition'),
-        Line2D([0], [0], color=line_colors[1], lw=2, label='Y-axis Partition')
+        Line2D([0], [0], color=line_colors[0], lw=2, label='Horizontal Partition'),
+        Line2D([0], [0], color=line_colors[1], lw=2, label='Vertical Partition')
     ]
     ax.legend(handles=legend_elements, loc='upper right', frameon=True, 
               framealpha=0.9, edgecolor='lightgray')
@@ -209,7 +209,7 @@ def create_kdtree_animation(points, root, bbox):
 
 def main():
     # Generate random points
-    # np.random.seed(42)  # For reproducibility
+    np.random.seed(100)  # For reproducibility
     N = int(input("Enter number of points : "))
     num_points = N  # Number of points
     
