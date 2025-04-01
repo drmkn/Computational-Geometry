@@ -96,7 +96,7 @@ class QuadNode:
 class QuadTree:
     def __init__(self, boundary, max_points=4):
         self.root = QuadNode(boundary, max_points)
-        self.labeled_nodes = []
+        self.labeled_nodes = []  # Will store both internal and leaf nodes
         self.inserted_points = []
         self.animation_completed = False
     
@@ -111,8 +111,8 @@ class QuadTree:
     def get_inserted_points_count(self):
         return len(self.inserted_points)
     
-    def label_nodes_inorder(self):
-        """Label all leaf nodes using inorder traversal."""
+    def label_all_nodes(self):
+        """Label all nodes (both internal and leaf) using inorder traversal."""
         self.labeled_nodes = []
         self._inorder_traversal(self.root)
         return self.labeled_nodes
@@ -121,17 +121,24 @@ class QuadTree:
         if node is None:
             return index
         
-        if node.is_leaf():
-            node.label = len(self.labeled_nodes)
-            self.labeled_nodes.append(node)
-            return index + 1
+        if len(node.children) > 0:
+            # Process NW child
+            index = self._inorder_traversal(node.children[0], index)
+            
+            # Process NE child
+            index = self._inorder_traversal(node.children[1], index)
+        
+        # Process current node (both internal and leaf nodes)
+        node.label = len(self.labeled_nodes)
+        self.labeled_nodes.append(node)
+        index += 1
         
         if len(node.children) > 0:
-            # Process children in order: NW, NE, SW, SE
-            index = self._inorder_traversal(node.children[0], index)  # Northwest
-            index = self._inorder_traversal(node.children[1], index)  # Northeast
-            index = self._inorder_traversal(node.children[2], index)  # Southwest
-            index = self._inorder_traversal(node.children[3], index)  # Southeast
+            # Process SW child
+            index = self._inorder_traversal(node.children[2], index)
+            
+            # Process SE child
+            index = self._inorder_traversal(node.children[3], index)
         
         return index
 
@@ -149,10 +156,10 @@ def create_quadtree_animation(points, boundary, max_points=1):
     sns.set_theme(style="whitegrid")
     
     # Setup the figure and axes with seaborn styling
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(10, 12))
     plt.subplots_adjust(bottom=0.3)  # Make more room for controls
-    ax.set_xlim(boundary[0]-0.01, boundary[2]+0.01)
-    ax.set_ylim(boundary[1]-0.01, boundary[3]+0.01)
+    ax.set_xlim(boundary[0]-0.25, boundary[2]+0.25)
+    ax.set_ylim(boundary[1]-0.25, boundary[3]+0.25)
     ax.set_title('Quadtree Building Animation and drawing disks by user interaction', fontsize=14)
     ax.set_xlabel('X', fontsize=12)
     ax.set_ylabel('Y', fontsize=12)
@@ -160,9 +167,10 @@ def create_quadtree_animation(points, boundary, max_points=1):
     # Update color palette based on seaborn
     palette = sns.color_palette()
     point_color = palette[0]  # First color from the palette
-    rect_color = palette[1]   # Second color
-    highlight_color = palette[3]  # Fourth color (usually red in many palettes)
-    text_color = palette[4]   # Fifth color
+    rect_color = palette[6]   
+    highlight_color1 = palette[3]  # Fourth color (usually red in many palettes)
+    highlight_color2 = palette[4]
+    text_color = palette[5]   # Fifth color
     
     # Initialize scatter plot with ALL points visible from the start
     scatter = ax.scatter([p[0] for p in points], [p[1] for p in points], 
@@ -242,7 +250,7 @@ def create_quadtree_animation(points, boundary, max_points=1):
             # On the last frame, set up interactive controls
             if i == len(points) - 1:
                 # Label nodes (but don't show labels yet)
-                final_quadtree.label_nodes_inorder()
+                final_quadtree.label_all_nodes()  # Now labels all nodes
                 state['valid_nodes'] = list(range(len(final_quadtree.labeled_nodes)))
                 setup_interactive_controls()
                 
@@ -272,6 +280,7 @@ def create_quadtree_animation(points, boundary, max_points=1):
             reveal_labels(final_quadtree, ax, text_color)
             update_status(f"Labels revealed. You can draw disks for nodes in range {state['valid_nodes'][0]} - {state['valid_nodes'][-1]}.")
         else:
+            # state['labels_revealed'] = False
             update_status("Labels are already visible.")
     
     def on_clear(event):
@@ -317,8 +326,8 @@ def create_quadtree_animation(points, boundary, max_points=1):
             node1 = final_quadtree.labeled_nodes[idx1]
             node2 = final_quadtree.labeled_nodes[idx2]
             
-            circle1 = draw_disk(ax, node1, highlight_color) 
-            circle2 = draw_disk(ax, node2, highlight_color)
+            circle1 = draw_disk(ax, node1, highlight_color1) 
+            circle2 = draw_disk(ax, node2, highlight_color2)
             
             state['circles'].extend([circle1, circle2])
             
@@ -371,20 +380,28 @@ def create_quadtree_animation(points, boundary, max_points=1):
     
     # Create the animation
     ani = FuncAnimation(fig, animate, frames=len(points), init_func=init,
-                        interval=1000, repeat=False, blit=False)
+                        interval=300, repeat=False, blit=False)
     
     return fig, ax, ani, final_quadtree
 
 def draw_disk(ax, node, color, label=None):
-    """Draw a disk enclosing a node."""
+    """Draw a disk enclosing a node based on the maximum diameter of the partition."""
     x_min, y_min, x_max, y_max = node.boundary
     
-    # Calculate center and radius
+    # Calculate center
     center_x = (x_min + x_max) / 2
     center_y = (y_min + y_max) / 2
     
-    # Calculate radius based on node size
-    radius = max((x_max - x_min), (y_max - y_min)) / 2
+    # Calculate maximum diameter of the partition
+    width = x_max - x_min
+    height = y_max - y_min
+    
+    # Calculate diagonal distance (maximum possible distance between any two points in the rectangle)
+    # Using the pythagorean theorem: diagonal = sqrt(width^2 + height^2)
+    max_diameter = np.sqrt(width**2 + height**2)
+    
+    # Use half the diagonal as radius (covering all corners of the rectangle)
+    radius = max_diameter / 2
     
     # Draw circle
     circle = patches.Circle((center_x, center_y), radius,
@@ -395,15 +412,23 @@ def draw_disk(ax, node, color, label=None):
     return circle
 
 def reveal_labels(quadtree, ax, text_color):
-    """Reveal labels of all leaf nodes immediately."""
+    """Reveal labels of all nodes."""
     labeled_nodes = quadtree.labeled_nodes
     
     for node in labeled_nodes:
         x_min, y_min, x_max, y_max = node.boundary
         x_center = (x_min + x_max) / 2
         y_center = (y_min + y_max) / 2
-        ax.text(x_center, y_center, str(node.label), ha='center', va='center',
-               fontweight='bold', fontsize=10, color=text_color, zorder=3)
+        
+        # Different style for internal vs leaf nodes
+        if node.is_leaf():
+            ax.text(x_center, y_center, str(node.label), ha='center', va='center',
+                   fontweight='bold', fontsize=7, color=text_color, zorder=3)
+        else:
+            # Internal nodes with a different style (e.g., square background)
+            ax.text(x_center, y_center, str(node.label), ha='center', va='center',
+                   fontweight='bold', fontsize=7, color=text_color, zorder=3,
+                   bbox=dict(boxstyle="square,pad=0.3", fc='white', alpha=0.7))
     
     plt.draw()
     return True
