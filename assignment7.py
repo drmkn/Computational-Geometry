@@ -1,3 +1,14 @@
+'''*Problem Statement:Given n points in a 2D plane, perform Delaunay Triangulation using incremental insertion. The user specifies a step i (1≤i≤n), and the program displays the edge flip process occurring at that step. If no edge flip occurs at step i, display "No edge flip".    **Input*: 1. An integer n representing the number of points.
+2. n points given as (𝑥𝑖,𝑦𝑖) coordinates, where:
+    - Each 𝑥𝑖,𝑦𝑖 is a real number.
+    - Points are given in arbitrary order.
+3. An integer i representing the step at which the user wants to    inspect the edge flip process.                                                                           *Output*: 1. If an edge flip occurs at step i:
+                   - Show the affected edges before and after the flip.
+                   - Display the updated triangulation after the flip.
+                   2. If no edge flip occurs at step i:
+                    - Print "No edge flip".
+                   3. The final Delaunay Triangulation after all points have been inserted.'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation

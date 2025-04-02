@@ -1,3 +1,5 @@
+'''Given a convex polygon Q in anticlockwise order . Preprocess Q such that for any query point q , the following questions can be 
+solved in O(logn) time : (i). q belongs to Q or not (ii) if q does not belongs to Q then find the tangents of Q from q.'''
 import numpy as np
 import matplotlib.pyplot as plt
 

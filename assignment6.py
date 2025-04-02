@@ -1,3 +1,23 @@
+'''Input Format
+- An integer n representing the number of points.
+- A list of n points, each represented as a tuple (x, y).
+
+Output Format
+- The center (c_x, c_y) and radius r of the smallest enclosing disk.
+
+Algorithm
+1. Randomly permute the points.
+2. Start with the smallest enclosing disk of the first two points.
+3. If the next point lies inside the current disk, continue.
+4. Otherwise, recompute the disk with the additional constraint that the new point must be on the boundary.
+5. Recursively enforce constraints using at most three boundary points.
+6. Return the computed disk.
+
+Implementation Details
+- Use the circumcircle formula for three points.
+- Implement helper functions MinDiskWith1Pt and MinDiskWith2Pts for recursive updates.
+- The expected runtime should be *O(n)*.'''
+
 import matplotlib
 matplotlib.use('TkAgg')  # or 'Qt5Agg', depending on your system
 import matplotlib.pyplot as plt

@@ -1,3 +1,9 @@
+'''Assignment 10
+=============
+1. Find bounding box for given n 2-D points
+2. Animation for 2D-tree
+partitioning( equal #points on both left & right partitons => consider median while partitioning )
+with numbering written on each partition line.'''
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns

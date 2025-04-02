@@ -1,3 +1,25 @@
+'''	
+Assignment 1: Visualizing the Upper Convex Hull Using Graham's Scan
+
+Objective:
+- Compute the Upper Convex Hull of a given set of points P  using the Graham Scan algorithm.
+- Visualize the stack changes step-by-step during the construction of the upper hull
+
+Input:
+   - A set of  n  points  P = {(x_1, y_1), (x_2, y_2), ..., (x_n, y_n)} , where n >= 3.
+
+Output:
+   - A visualization showing:
+     - The points currently in the stack.
+     - The points being pushed or popped at each step.
+
+Deliverables:
+   - A clear visualization of the stack changes while constructing the upper convex hull.
+
+Evaluation:
+- The visualization clearly shows the progression of the stack.
+- The final stack corresponds to the points forming the upper convex hull.'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle

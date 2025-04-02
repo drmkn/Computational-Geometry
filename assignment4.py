@@ -1,3 +1,19 @@
+'''Assignment 04
+Problem Statement
+Given a set of points representing the vertices of a polygon in anticlockwise order, the goal is to draw the polygon and identify special types of vertices within it. Specifically, you need to mark:
+
+Split vertices
+Merge vertices
+Input (I/P)
+A sequence of n points ( P_1, P_2, P_3, ..., P_n ) representing the vertices of a simple polygon. These points are given in anticlockwise order.
+
+Output (O/P)
+A visual representation of the polygon with:
+
+The polygon edges clearly drawn.
+Split vertices marked distinctly.
+Merge vertices marked distinctly.'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 

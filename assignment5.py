@@ -1,3 +1,17 @@
+'''Assignment 5 : Half-Plane Intersection Using the Sweep Line Algorithm
+
+Problem Statement
+
+Given two convex polygon Q=(q_1,q_2, ... , q_m) and P= (p_1,p_2, ... p_n) in anticlockwise orientation of their vertices. 
+The Half-Plane Intersection Problem involves finding the common intersection region of multiple half-planes in a 2D plane. 
+
+Output Format:
+- If no intersection exists: Print "No intersection".
+- Otherwise, print the vertices of the polygon in counterclockwise order.
+
+Approach: Sweep Line Algorithm with Event Queue(Visual Representation of the Event Queue Processing).
+'''
+
 import matplotlib
 matplotlib.use('TkAgg')  # or 'Qt5Agg', depending on your system
 import matplotlib.pyplot as plt

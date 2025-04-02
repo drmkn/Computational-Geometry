@@ -1,3 +1,14 @@
+'''Assignment: Determine Monotonicity of a Simple Polygon w.r.t. a Given Line
+Problem Statement:
+You are given a simple polygon and a line defined by the equation ( ax + by + c = 0 ). Your task is to determine whether the polygon is monotone with respect to the given line.
+
+Input:
+A list of vertices of the polygon, where each vertex is represented by a pair of coordinates ((x_i, y_i)). The vertices are given in either clockwise or counterclockwise order.
+Three coefficients ( a ), ( b ), and ( c ) that define the line equation ( ax + by + c = 0 ).
+Output:
+True if the polygon is monotone with respect to the given line.
+False if the polygon is not monotone with respect to the line, and also output a plot of the polygon along with the line. Additionally, display the perpendicular line at the point where monotonicity is violated.'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 import math

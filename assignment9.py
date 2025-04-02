@@ -1,3 +1,10 @@
+'''Assignment 9
+============
+1.Build a Quadtree T for a set P of N points. 
+2.Build a numbering of the nodes of T(maybe adj. List)
+3.Take two random node index and draw the disks enclosing
+those two nodes (square/rectangle)'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -380,7 +387,7 @@ def create_quadtree_animation(points, boundary, max_points=1):
     
     # Create the animation
     ani = FuncAnimation(fig, animate, frames=len(points), init_func=init,
-                        interval=300, repeat=False, blit=False)
+                        interval=500, repeat=False, blit=False)
     
     return fig, ax, ani, final_quadtree
 

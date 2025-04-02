@@ -1,3 +1,18 @@
+'''### Problem Statement: *Finding the Shortest Vertical k-Stabber for n Lines*  
+
+#### *Description:*  
+Given *n* lines in a 2D plane, each represented by the equation *y = mx + c, determine the shortest vertical segment (stabber) that intersects at least **k* of these lines.  
+
+#### *Input:*  
+- A set of *n* lines, each defined by a pair *(m, c), representing the equation **y = mx + c*.  
+- An integer *k*, specifying the minimum number of lines that the vertical stabber must intersect.  
+
+#### *Output:*  
+- The *length* of the shortest vertical segment that intersects at least *k* of the given lines.  
+
+#### *Constraints & Requirements:*  
+- The solution should be implemented using the *line sweep algorithm*.  
+- The entire process should be *animated* to visualize the evolution of the vertical stabber as it moves through the arrangement.'''
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
