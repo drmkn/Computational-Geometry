@@ -1,9 +1,3 @@
-'''Given a fixed number n, generate n random points in R^2, and compute all subsets of points that can be captured
- using axis-aligned rectangles whose sides are parallel to the axes. For each such subset, show a rectangle that
-captures exactly those points, and animate this process by highlighting the captured points and displaying the corresponding rectangle. 
-Label all points for clarity. At the end, list all subsets of the point set (excluding the empty set) and identify those that cannot 
-be represented as the intersection of an axis-aligned rectangle with the point set.'''
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -33,6 +27,10 @@ class AxisAlignedRectangleVisualization:
         self.capturable_subsets = []
         self.non_capturable_subsets = []
         self.classify_subsets()
+        
+        # Combine both types of subsets for animation
+        self.all_classified_subsets = [(subset, True) for subset in self.capturable_subsets] + \
+                                      [(subset, False) for subset in self.non_capturable_subsets]
         
         # Set up the figure and axes with Seaborn styling
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
@@ -99,10 +97,10 @@ class AxisAlignedRectangleVisualization:
         if not subset:
             return None
         
-        min_x = min(p['x'] for p in subset) - 0.01
-        max_x = max(p['x'] for p in subset) + 0.01
-        min_y = min(p['y'] for p in subset) - 0.01
-        max_y = max(p['y'] for p in subset) + 0.01
+        min_x = min(p['x'] for p in subset)
+        max_x = max(p['x'] for p in subset)
+        min_y = min(p['y'] for p in subset)
+        max_y = max(p['y'] for p in subset)
         
         return (min_x, min_y, max_x - min_x, max_y - min_y)
     
@@ -119,68 +117,60 @@ class AxisAlignedRectangleVisualization:
         self.ax.set_ylim(0, 1)
         self.ax.set_aspect('equal')
         
-        # Set title with Seaborn styling
-        if subset_idx < len(self.capturable_subsets):
-            current_subset = self.capturable_subsets[subset_idx]
+        # Get current subset and its capturable status
+        if subset_idx < len(self.all_classified_subsets):
+            current_subset, is_capturable = self.all_classified_subsets[subset_idx]
             subset_str = self.format_subset(current_subset)
-            self.ax.set_title(f'Subset {subset_str} ({subset_idx + 1}/{len(self.capturable_subsets)})', fontsize=14)
+            status = "Capturable" if is_capturable else "NON-Capturable"
+            self.ax.set_title(f'Subset {subset_str} - {status} ({subset_idx + 1}/{len(self.all_classified_subsets)})', fontsize=14)
         else:
             self.ax.set_title('No subset selected', fontsize=14)
+            current_subset = []
+            is_capturable = True
         
-        # Create a palette for the points
-        palette = sns.color_palette("dark", 2)
+        # Define colors based on capturable status
+        capturable_color = 'red'
+        non_capturable_color = 'green'
+        highlight_color = capturable_color if is_capturable else non_capturable_color
         
-        # Extract points for Seaborn plot
+        # Extract points for plot
         x_values = [p['x'] for p in self.points]
         y_values = [p['y'] for p in self.points]
-        colors = []
         
-        # Determine colors for points
-        for p in self.points:
-            if subset_idx < len(self.capturable_subsets) and p in self.capturable_subsets[subset_idx]:
-                colors.append(palette[1])  # Red in the palette
-            else:
-                colors.append(palette[0])  # Blue in the palette
-        
-        # Plot points using Seaborn
-        sns.scatterplot(
-            x=x_values, 
-            y=y_values, 
-            hue=[p in self.capturable_subsets[subset_idx] if subset_idx < len(self.capturable_subsets) else False for p in self.points],
-            palette=palette,
-            s=150,  # Size of points
-            ax=self.ax,
-            legend=False
-        )
-        
-        # Add point labels manually
-        for p in self.points:
+        # Plot all points first
+        for i, p in enumerate(self.points):
+            in_subset = p in current_subset
+            color = highlight_color if in_subset else 'blue'
+            self.ax.scatter(p['x'], p['y'], color=color, s=150, zorder=3)
             self.ax.text(p['x'] + 0.02, p['y'] + 0.02, str(p['id']), fontsize=12, 
-                        weight='bold', color='black')
+                        weight='bold', color='black', zorder=4)
         
         # Draw bounding rectangle for current subset
-        if subset_idx < len(self.capturable_subsets):
-            rect = self.get_bounding_rect(self.capturable_subsets[subset_idx])
+        if current_subset:
+            rect = self.get_bounding_rect(current_subset)
             if rect:
+                rect_color = highlight_color
                 self.ax.add_patch(
                     patches.Rectangle(
                         (rect[0], rect[1]), rect[2], rect[3],
                         linewidth=2,
-                        edgecolor='red',
-                        facecolor='orange',
-                        alpha=0.2
+                        edgecolor=rect_color,
+                        facecolor=rect_color,
+                        alpha=0.2,
+                        zorder=2
                     )
                 )
         
-        # Add info text with Seaborn styling
+        # Add info text
         info_text = f"""
         Total points: {self.n_points}
         Capturable subsets: {len(self.capturable_subsets)}
         Non-capturable subsets: {len(self.non_capturable_subsets)}
+        Current: {"Capturable (red)" if is_capturable else "NON-Capturable (green)"}
         """
         self.ax.text(0.02, 0.98, info_text, transform=self.ax.transAxes, 
                     verticalalignment='top', fontsize=10, 
-                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.7), zorder=5)
         
         # Set axis labels
         self.ax.set_xlabel('X-axis', fontsize=12)
@@ -191,7 +181,7 @@ class AxisAlignedRectangleVisualization:
     
     def update_frame(self, frame):
         """Update function for animation"""
-        return self.draw_frame(frame % len(self.capturable_subsets))
+        return self.draw_frame(frame % len(self.all_classified_subsets))
     
     def toggle_animation(self):
         """Toggle animation play/pause"""
@@ -219,7 +209,7 @@ class AxisAlignedRectangleVisualization:
         if animate:
             self.anim = animation.FuncAnimation(
                 self.fig, self.update_frame, 
-                frames=len(self.capturable_subsets),
+                frames=len(self.all_classified_subsets),
                 interval=interval, repeat=True
             )
             self.anim.event_source.stop()  # Start paused
@@ -236,12 +226,11 @@ class AxisAlignedRectangleVisualization:
 def main():
     """Main function to run the visualization"""
     # You can adjust the number of points and the random seed
-    n_points = 6
+    n_points = 5
     # seed = 42  # None for random seed
     
     viz = AxisAlignedRectangleVisualization(n_points=n_points, seed=None)
-    viz.run_visualization(animate=True, interval=1000)  # Set interval (milliseconds) between frames
-    # print(viz.non_capturable_subsets)
+    viz.run_visualization(animate=True, interval=600)  # Set interval (milliseconds) between frames
 
 if __name__ == "__main__":
     main()
