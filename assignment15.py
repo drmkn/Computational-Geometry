@@ -13,7 +13,6 @@ class Line:
         self.name = name
     
     def y_at(self, x):
-        """Calculate y value at given x coordinate"""
         return self.slope * x + self.intercept
     
     def __str__(self):
@@ -23,10 +22,9 @@ class IntersectionPoint:
     def __init__(self, x, y, lines):
         self.x = x
         self.y = y
-        self.lines = lines  # Pair of lines that intersect here
+        self.lines = lines
     
     def __lt__(self, other):
-        """For priority queue comparison"""
         return self.x < other.x
     
     def __str__(self):
@@ -39,157 +37,95 @@ class TopologicalPlaneSweep:
         self.current_cut_order = []
         self.upper_horizon_tree = []
         self.lower_horizon_tree = []
-        self.stack = []  # Priority queue for upcoming intersections
+        self.stack = []
         self.processed_intersections = []
         self.current_x = 0
         self.step_count = 0
         self.colors = plt.cm.tab20(np.linspace(0, 1, num_lines))
-        self.all_intersections = []  # For visualization only
-        
+        self.all_intersections = []
+    
     def generate_random_lines(self):
-        """Generate random non-parallel lines with distinct slopes"""
         used_slopes = set()
-        
         for i in range(self.num_lines):
             while True:
-                # Generate random slope between -5 and 5, but not too close to 0
                 slope = random.uniform(-5, 5)
-                if abs(slope) < 0.1:  # Avoid nearly horizontal lines
+                if abs(slope) < 0.1:
                     continue
-                
-                # Check if this slope is already used (with some tolerance)
                 if all(abs(slope - s) > 0.2 for s in used_slopes):
                     used_slopes.add(slope)
                     break
-            
-            # Generate random y-intercept between -10 and 10
             intercept = random.uniform(-10, 10)
-            
             name = f"C{i+1}"
             self.lines.append(Line(slope, intercept, name))
     
     def calculate_intersection(self, line1, line2):
-        """Calculate intersection point between two lines"""
-        # Skip parallel lines
         if abs(line1.slope - line2.slope) < 1e-10:
             return None
-        
-        # Calculate intersection
         x = (line2.intercept - line1.intercept) / (line1.slope - line2.slope)
         y = line1.slope * x + line1.intercept
-        
         return IntersectionPoint(x, y, [line1, line2])
     
     def initialize_sweep(self):
-        """Initialize the sweep line at the leftmost possible position"""
-        # Find a good starting x position (before all possible intersections)
         min_x = float('inf')
         for i in range(len(self.lines)):
             for j in range(i+1, len(self.lines)):
                 intersection = self.calculate_intersection(self.lines[i], self.lines[j])
                 if intersection:
                     min_x = min(min_x, intersection.x)
-                    # Store for visualization only
                     self.all_intersections.append(intersection)
-                    
-        # Start slightly to the left of the leftmost intersection
         self.current_x = min_x - 2 if min_x != float('inf') else -10
-            
-        # Sort the lines by their y-value at the current_x (from top to bottom)
-        self.current_cut_order = sorted(self.lines, key=lambda line: -line.y_at(self.current_x))
-        
-        # Rename the original self.lines based on the current cut order
+        # Corrected: Sort by decreasing slope
+        self.current_cut_order = sorted(self.lines, key=lambda line: line.slope)
+        # Assign names based on sorted order
         for i, line in enumerate(self.current_cut_order):
-            line.name = f"L{i+1}"  # Assuming each line has a 'name' attribute
-        
-        # Initialize upper and lower horizon trees
+            line.name = f"L{i+1}"
         self.update_horizon_trees()
-        
-        # Find and add initial intersections to stack
         self.find_new_intersections()
     
     def update_horizon_trees(self):
-        """Update the Upper and Lower Horizon Trees at the current cut position"""
-        # Get line ordering at current position
         sorted_lines = self.current_cut_order.copy()
-        
-        # Upper horizon tree: for each line, which line is directly above it
         self.upper_horizon_tree = []
         for i in range(1, len(sorted_lines)):
             self.upper_horizon_tree.append((sorted_lines[i].name, sorted_lines[i-1].name))
-        
-        # Lower horizon tree: for each line, which line is directly below it
         self.lower_horizon_tree = []
         for i in range(len(sorted_lines) - 1):
             self.lower_horizon_tree.append((sorted_lines[i].name, sorted_lines[i+1].name))
     
     def find_new_intersections(self):
-        """Find new intersection points between adjacent lines in the cut ordering"""
         for i in range(len(self.current_cut_order) - 1):
             line1 = self.current_cut_order[i]
             line2 = self.current_cut_order[i + 1]
-            
-            # Calculate intersection point
             intersection = self.calculate_intersection(line1, line2)
-            
-            # Only add if it's to the right of the current sweep position
             if intersection and intersection.x > self.current_x:
-                # Check if this intersection is already in the stack
                 is_duplicate = False
                 for existing in self.stack:
                     if (abs(existing.x - intersection.x) < 1e-10 and 
-                        abs(existing.y - intersection.y) < 1e-10 and
                         set([l.name for l in existing.lines]) == set([l.name for l in intersection.lines])):
                         is_duplicate = True
                         break
-                
                 if not is_duplicate:
                     heapq.heappush(self.stack, intersection)
     
     def perform_elementary_step(self):
-        """Perform one elementary step of the topological plane sweep"""
         if not self.stack:
-            return False  # No more intersections to process
-        
-        # Get the next intersection point
+            return False
         intersection = heapq.heappop(self.stack)
         self.processed_intersections.append(intersection)
         self.current_x = intersection.x
         self.step_count += 1
-        
-        # Find the indices of the intersecting lines in the current cut order
         line1, line2 = intersection.lines
-        line1_idx = -1
-        line2_idx = -1
-        
-        for i, line in enumerate(self.current_cut_order):
-            if line.name == line1.name:
-                line1_idx = i
-            elif line.name == line2.name:
-                line2_idx = i
-        
-        # Check if lines are adjacent in the current cut order
+        line1_idx = next(i for i, line in enumerate(self.current_cut_order) if line.name == line1.name)
+        line2_idx = next(i for i, line in enumerate(self.current_cut_order) if line.name == line2.name)
         if abs(line1_idx - line2_idx) != 1:
-            # This can happen if multiple intersections occur at the same x-coordinate
-            # In this case, we need to handle them in the correct order
             return True
-        
-        # Ensure line1 is above line2 in the current ordering
         if line1_idx > line2_idx:
             line1_idx, line2_idx = line2_idx, line1_idx
             line1, line2 = line2, line1
-        
-        # Swap the two lines in the current cut order
-        self.current_cut_order[line1_idx], self.current_cut_order[line2_idx] = \
-            self.current_cut_order[line2_idx], self.current_cut_order[line1_idx]
-        
-        # Update the horizon trees after the swap
+        self.current_cut_order[line1_idx], self.current_cut_order[line2_idx] = self.current_cut_order[line2_idx], self.current_cut_order[line1_idx]
         self.update_horizon_trees()
-        
-        # Find new potential intersections after the swap
         self.find_new_intersections()
-        
-        return True  # Successfully performed a step
+        return True
+
     
     def get_animation_frames(self):
         """Generate all frames for the animation"""
@@ -416,7 +352,7 @@ class TopologicalPlaneSweep:
         
         # Create the animation
         ani = animation.FuncAnimation(fig, update, frames=len(frames), 
-                                    interval=1500, blit=False, repeat=True)
+                                    interval=2000, blit=False, repeat=True)
         
         plt.tight_layout()
         plt.subplots_adjust(top=0.9, hspace=0.3)
