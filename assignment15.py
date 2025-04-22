@@ -91,12 +91,16 @@ class TopologicalPlaneSweep:
                     min_x = min(min_x, intersection.x)
                     # Store for visualization only
                     self.all_intersections.append(intersection)
-        
+                    
         # Start slightly to the left of the leftmost intersection
         self.current_x = min_x - 2 if min_x != float('inf') else -10
-        
+            
         # Sort the lines by their y-value at the current_x (from top to bottom)
         self.current_cut_order = sorted(self.lines, key=lambda line: -line.y_at(self.current_x))
+        
+        # Rename the original self.lines based on the current cut order
+        for i, line in enumerate(self.current_cut_order):
+            line.name = f"L{i+1}"  # Assuming each line has a 'name' attribute
         
         # Initialize upper and lower horizon trees
         self.update_horizon_trees()
@@ -437,7 +441,8 @@ class TopologicalPlaneSweep:
 if __name__ == "__main__":
     # Get input from user
     num_lines = int(input("Enter the number of lines (N): "))
-    
+    np.random.seed(42)
+    random.seed(42)
     # Initialize and run the algorithm
     sweep = TopologicalPlaneSweep(num_lines)
     ani, fig = sweep.run_algorithm()
